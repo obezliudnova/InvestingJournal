@@ -23,7 +23,9 @@ var jsonResponse = await response.Content.ReadAsStringAsync();
 //Console.WriteLine($"{jsonResponse}\n");
 
 List<CurrencyRate> rates = JsonSerializer.Deserialize<List<CurrencyRate>>(jsonResponse, options);
-rates.Dump();
+rates.Where(r => r.Code == "USD").Dump();
+
+
 
 public record CurrencyRate 
 {
@@ -54,7 +56,7 @@ public class DateOnlyConverter : JsonConverter<DateOnly>
                             Type typeToConvert, JsonSerializerOptions options)
     {
         var value = reader.GetString();
-        return DateOnly.Parse(value!);
+        return DateOnly.ParseExact(value!, "dd.MM.yyyy");
     }
 
     public override void Write(Utf8JsonWriter writer, DateOnly value, 
