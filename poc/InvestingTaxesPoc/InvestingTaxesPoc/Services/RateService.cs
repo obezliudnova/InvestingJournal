@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
+﻿using System.Text.Json;
 
 namespace InvestingTaxesPoc.Services
 {
@@ -31,6 +26,12 @@ namespace InvestingTaxesPoc.Services
             var jsonResponse = await response.Content.ReadAsStringAsync();
 
             return JsonSerializer.Deserialize<List<CurrencyRate>>(jsonResponse, _options) ?? [];
+        }
+
+        public async Task<CurrencyRate> GetCurrencyRateAsync(DateOnly date, string currencyCode)
+        {
+            var rates = await GetRatesByDateAsync(date);
+            return rates.Where(r => r.Code == currencyCode).Single();
         }
     }
 }

@@ -7,13 +7,13 @@ public record Trade
     public string? Currency { get; set; }
     public string? Symbol { get; set; }
     public DateTime DateTime { get; set; }
-    public decimal Quantity { get; set; }
-    public decimal TPrice { get; set; }
-    public decimal Proceeds { get; set; }
-    public decimal CommUSD { get; set; }
-    public decimal Basis { get; set; }
-    public decimal RealizedPL { get; set; }
-    public decimal MTMPL { get; set; }
+    public double Quantity { get; set; }
+    public double TPrice { get; set; }
+    public double Proceeds { get; set; }
+    public double CommUSD { get; set; }
+    public double Basis { get; set; }
+    public double RealizedPL { get; set; }
+    public double MTMPL { get; set; }
     public string? Code { get; set; }
 
     public override sealed string ToString() => $"Trade: {AssetCategory} | {Symbol} | {DateTime} | {TPrice} | {Currency} | {CommUSD}";
