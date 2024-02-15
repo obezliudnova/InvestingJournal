@@ -17,6 +17,17 @@ public class CsvStatementParser : IStatementParser
     public FinantialStatement Parse(string filePath)
     {
         using (var reader = new StreamReader(filePath))
+            return Parse(reader);
+    }
+
+    public FinantialStatement Parse(MemoryStream stream)
+    {
+        using (var reader = new StreamReader(stream))
+            return Parse(reader);
+    }
+
+    private FinantialStatement Parse(StreamReader reader)
+    {
         using (var csv = new CsvReader(reader, _config))
         {
             csv.Context.RegisterClassMap<DividendMap>();
@@ -41,9 +52,11 @@ public class CsvStatementParser : IStatementParser
                 {
                     switch (csv.HeaderRecord[0])
                     {
-                        case "Dividends": statement.Dividends.Add(csv.GetRecord<Dividend>());
+                        case "Dividends":
+                            statement.Dividends.Add(csv.GetRecord<Dividend>());
                             break;
-                        case "Trades": statement.Trades.Add(csv.GetRecord<Trade>());
+                        case "Trades":
+                            statement.Trades.Add(csv.GetRecord<Trade>());
                             break;
                         default:
                             break;
@@ -53,6 +66,7 @@ public class CsvStatementParser : IStatementParser
             return statement;
         }
     }
+
     private static class RowType
     {
         public static string Header => "Header";
