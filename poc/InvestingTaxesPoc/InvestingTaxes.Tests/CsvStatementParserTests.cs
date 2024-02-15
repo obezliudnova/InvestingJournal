@@ -2,6 +2,8 @@ using FluentAssertions;
 using System.Text;
 
 namespace InvestingTaxes.Tests;
+
+[TestFixture]
 public class CsvStatementParserTests
 {
     private CsvStatementParser _sut;

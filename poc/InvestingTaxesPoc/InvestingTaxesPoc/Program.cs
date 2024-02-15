@@ -10,22 +10,9 @@ using HttpClient httpClient = new()
 };
 
 IRateService rateService = new RateService(httpClient);
-var dates = new List<DateOnly>();
-statement.Dividends.ForEach(d => dates.Add(DateOnly.FromDateTime(d.Date)));
-var rates = new Dictionary<DateOnly, List<CurrencyRate>>();
-foreach (var date in dates.Distinct())
-{
-    var dateRates = await rateService.GetRatesByDateAsync(date);
-    rates[date] = dateRates;
-}
+ITaxCalculationService taxService = new TaxCalculationService(rateService);
+var statementTax = await taxService.CalculateTax(statement);
 
-var dividendTaxes = new List<DividendTax>();
-foreach (var dividend in statement.Dividends)
-{
-    var rate = await rateService.GetCurrencyRateAsync(DateOnly.FromDateTime(dividend.Date), dividend.Currency!);
-    dividendTaxes.Add(new DividendTax(dividend, rate.Rate));
-}
-var statementTax = new FinantialStatementTaxes() { DividendTax = dividendTaxes };
 Console.WriteLine(statement);
 Console.WriteLine("Calculated Taxes");
 Console.WriteLine(statementTax);
