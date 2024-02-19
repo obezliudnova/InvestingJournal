@@ -55,7 +55,7 @@ namespace InvestingTaxesPoc.Tests
         }
 
         [Test]
-        public async Task GetCurrencyRateAsync_ShouldReturnCurrencyRate()
+        public async Task GetCurrencyRateAsync_ShouldReturnFilteredCurrencyRate()
         {
             // Arrange
             var date = new DateOnly(2024, 2, 14);
@@ -83,7 +83,7 @@ namespace InvestingTaxesPoc.Tests
     }
 }
 
-public class MockHttpMessageHandler : HttpMessageHandler
+public partial class MockHttpMessageHandler : HttpMessageHandler
 {
     private readonly string _jsonResponse;
 
