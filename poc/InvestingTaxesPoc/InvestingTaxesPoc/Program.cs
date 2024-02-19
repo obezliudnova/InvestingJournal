@@ -1,20 +1,37 @@
 ﻿using InvestingTaxesPoc.Services;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
-var filePath = args.Any() ? args[0] : "example.csv";
-var parser = new CsvStatementParser();
-var statement = parser.Parse(filePath);
+HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
 
-using HttpClient httpClient = new()
+builder.Services.AddTransient<IStatementParser, CsvStatementParser>();
+builder.Services.AddTransient<IRateService, RateService>();
+builder.Services.AddTransient<ITaxCalculationService, TaxCalculationService>();
+builder.Services.AddHttpClient<IRateService, RateService>("Bank", httpClient =>
 {
-    BaseAddress = new Uri("https://bank.gov.ua"),
-};
+    httpClient.BaseAddress = new Uri("https://bank.gov.ua");
+});
 
-IRateService rateService = new RateService(httpClient);
-ITaxCalculationService taxService = new TaxCalculationService(rateService);
-var statementTax = await taxService.CalculateTax(statement);
+using IHost host = builder.Build();
 
-Console.WriteLine(statement);
-Console.WriteLine("Calculated Taxes");
-Console.WriteLine(statementTax);
+await RunAsync(host.Services, args);
+host.Run();
 
-Console.ReadLine();
+
+static async Task RunAsync(IServiceProvider hostProvider, string[] args)
+{
+    using IServiceScope serviceScope = hostProvider.CreateScope();
+    IServiceProvider provider = serviceScope.ServiceProvider;
+    var taxService = provider.GetRequiredService<ITaxCalculationService>();
+    var parser = provider.GetRequiredService<IStatementParser>();
+    
+    var filePath = args.Any() ? args[0] : "example.csv";
+    var statement = parser.Parse(filePath);
+    var statementTax = await taxService.CalculateTax(statement);
+
+    Console.WriteLine(statement);
+    Console.WriteLine("Calculated Taxes");
+    Console.WriteLine(statementTax);
+
+    Console.WriteLine();
+}

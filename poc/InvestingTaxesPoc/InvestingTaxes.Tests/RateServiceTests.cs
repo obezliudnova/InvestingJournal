@@ -1,57 +1,57 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
+﻿using System.Net;
 using System.Text.Json;
-using System.Threading.Tasks;
 using FluentAssertions;
 using InvestingTaxesPoc.Services;
-using NSubstitute;
-using NUnit.Framework;
 
 namespace InvestingTaxesPoc.Tests
 {
     [TestFixture]
     public class RateServiceTests
     {
-        private RateService _rateService;
-        private HttpClient _httpClient;
+        private HttpClient? _httpClient;
+        private JsonSerializerOptions _options;
 
         [SetUp]
-        public void Setup()
+        public void SetUp()
         {
-            var mockHttpMessageHandler = Substitute.ForPartsOf<MockHttpMessageHandler>();
-
-            _httpClient = new HttpClient(mockHttpMessageHandler)
+            _options = new JsonSerializerOptions()
             {
-                BaseAddress = new Uri("https://test"),
+                PropertyNameCaseInsensitive = true
             };
-            _rateService = new RateService(_httpClient);
+            _options.Converters.Add(new DateOnlyConverter());
         }
 
         [Test]
         public async Task GetRatesByDateAsync_ShouldDeserializeJsonResponse()
         {
             // Arrange
+
             var date = new DateOnly(2024, 2, 14);
             var expectedRates = new List<CurrencyRate>
             {
-                new CurrencyRate { Code = "USD", Rate = 1.0 },
-                new CurrencyRate { Code = "EUR", Rate = 1.2 }
+                new CurrencyRate { Code = "USD", Rate = 1.0, ExchangeDate = date },
+                new CurrencyRate { Code = "EUR", Rate = 1.2, ExchangeDate = date }
             };
-            var jsonResponse = JsonSerializer.Serialize(expectedRates);
 
-            _httpClient.GetAsync(Arg.Any<string>()).Returns(new HttpResponseMessage
-            {
-                StatusCode = System.Net.HttpStatusCode.OK,
-                Content = new StringContent(jsonResponse)
-            });
+            var jsonResponse = JsonSerializer.Serialize(expectedRates, _options);
+            RateService sut = CreateSut(jsonResponse);
 
             // Act
-            var rates = await _rateService.GetRatesByDateAsync(date);
+            var rates = await sut.GetRatesByDateAsync(date);
 
             // Assert
             rates.Should().BeEquivalentTo(expectedRates);
+        }
+
+        private RateService CreateSut(string jsonResponse)
+        {
+            var mockHttpMessageHandler = new MockHttpMessageHandler(jsonResponse);
+            _httpClient = new HttpClient(mockHttpMessageHandler)
+            {
+                BaseAddress = new Uri("https://test"),
+            };
+            var sut = new RateService(_httpClient);
+            return sut;
         }
 
         [Test]
@@ -61,18 +61,15 @@ namespace InvestingTaxesPoc.Tests
             var date = new DateOnly(2024, 2, 14);
             var expectedRates = new List<CurrencyRate>
             {
-                new CurrencyRate { Code = "USD", Rate = 1.0 },
-                new CurrencyRate { Code = "EUR", Rate = 1.2 }
+                new CurrencyRate { Code = "USD", Rate = 1.0, ExchangeDate = date },
+                new CurrencyRate { Code = "EUR", Rate = 1.2, ExchangeDate = date }
             };
 
-            _httpClient.GetAsync(Arg.Any<string>()).Returns(new HttpResponseMessage
-            {
-                StatusCode = System.Net.HttpStatusCode.OK,
-                Content = new StringContent(JsonSerializer.Serialize(expectedRates))
-            });
+            var jsonResponse = JsonSerializer.Serialize(expectedRates, _options);
+            RateService sut = CreateSut(jsonResponse);
 
             // Act
-            var rate = await _rateService.GetCurrencyRateAsync(date, "EUR");
+            var rate = await sut.GetCurrencyRateAsync(date, "EUR");
 
             // Assert
             rate.Should().BeEquivalentTo(expectedRates[1]);
@@ -81,13 +78,20 @@ namespace InvestingTaxesPoc.Tests
         [TearDown]
         public void Cleanup()
         {
-            _httpClient.Dispose();
+            _httpClient?.Dispose();
         }
     }
 }
 
 public class MockHttpMessageHandler : HttpMessageHandler
 {
+    private readonly string _jsonResponse;
+
+    public MockHttpMessageHandler(string jsonResponse)
+    {
+        _jsonResponse = jsonResponse;
+    }
+
     protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
         return Task.FromResult(MockSend(request, cancellationToken));
@@ -100,6 +104,10 @@ public class MockHttpMessageHandler : HttpMessageHandler
 
     public virtual HttpResponseMessage MockSend(HttpRequestMessage request, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        return new HttpResponseMessage
+        {
+            StatusCode = HttpStatusCode.OK,
+            Content = new StringContent(_jsonResponse?? "")
+        };
     }
 }
