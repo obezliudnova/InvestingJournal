@@ -28,6 +28,8 @@ static async Task RunAsync(IServiceProvider hostProvider, string[] args)
     var filePath = args.Any() ? args[0] : "example.csv";
     var statement = parser.Parse(filePath);
     var statementTax = await taxService.CalculateTax(statement);
+    var writer = new CsvStatementWriter();
+    writer.WriteStatementToFile(statementTax);
 
     Console.WriteLine(statement);
     Console.WriteLine("Calculated Taxes");

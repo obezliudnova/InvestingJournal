@@ -50,7 +50,7 @@ public partial class MockHttpMessageHandler
             // Assert
             result.DividendTax.Should().BeEquivalentTo(expectedDividendTaxes);
             result.TotalPersonalIncomeTax.Should().Be(expectedTotalPersonalIncomeTax);
-            result.MilitaryDutyTax.Should().Be(expectedMilitaryDutyTax);
+            result.TotalMilitaryDutyTax.Should().Be(expectedMilitaryDutyTax);
         }
     }
 }

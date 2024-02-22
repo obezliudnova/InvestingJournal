@@ -35,7 +35,6 @@ public class CsvStatementParser : IStatementParser
             var statement = new FinantialStatement();
             while (csv.Read())
             {
-                var tableType = csv.GetField(0);
                 var rowType = csv.GetField(1);
 
                 if (rowType == RowType.Header)
