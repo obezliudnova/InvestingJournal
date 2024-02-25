@@ -22,7 +22,7 @@ jobs:
      - uses: actions/checkout@v4
        name: Checkout code
 
-     - uses: azure/login@v1.6.1
+     - uses: azure/login@v1
        name: Login to Azure
        with:
          client-id: ${{ vars.AZURE_CLIENT_ID }}
@@ -73,7 +73,7 @@ jobs:
     - name: Install .NET
       uses: actions/setup-dotnet@v4
 
-    - uses: azure/login@v1.6.1
+    - uses: azure/login@v1
       name: Login to Azure
       with:
         client-id: ${{ vars.AZURE_CLIENT_ID }}
@@ -100,7 +100,7 @@ jobs:
         echo '{ "ConnectionStrings": { "DefaultConnection": "" } }' > appsettings.json
         ./efbundle.exe --connection "Server=${{ steps.deploy.outputs.sqlServerFullyQualifiedDomainName }};Initial Catalog=${{ steps.deploy.outputs.sqlDatabaseName }};Persist Security Info=False;User ID=${{ vars.AZURE_SQL_ADMINISTRATOR_USERNAME }};Password=${{ secrets.AZURE_SQL_ADMINISTRATOR_PASSWORD }};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;" --verbose
 
-    - uses: azure/webapps-deploy@v2
+    - uses: azure/webapps-deploy@v3
       name: Deploy website
       with:
         app-name: ${{ steps.deploy.outputs.appServiceAppName }}
